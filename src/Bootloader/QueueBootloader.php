@@ -15,6 +15,7 @@ use Spiral\Core\FactoryInterface;
 use Spiral\Queue\Config\QueueConfig;
 use Spiral\Queue\ContainerRegistry;
 use Spiral\Queue\DefaultSerializer;
+use Spiral\Queue\Driver\NullDriver;
 use Spiral\Queue\Driver\SyncDriver;
 use Spiral\Queue\Failed\FailedJobHandlerInterface;
 use Spiral\Queue\Failed\LogFailedJobHandler;
@@ -24,8 +25,6 @@ use Spiral\Queue\QueueInterface;
 use Spiral\Queue\QueueManager;
 use Spiral\Queue\QueueRegistry;
 use Spiral\Queue\SerializerInterface;
-use Spiral\SendIt\MailJob;
-use Spiral\SendIt\MailQueue;
 
 final class QueueBootloader extends Bootloader
 {
@@ -101,7 +100,7 @@ final class QueueBootloader extends Bootloader
     private function initQueueConfig(EnvironmentInterface $env): void
     {
         $this->config->setDefaults(
-            \Spiral\Queue\Config\QueueConfig::CONFIG,
+            QueueConfig::CONFIG,
             [
                 'default' => $env->get('QUEUE_CONNECTION', 'sync'),
                 'connections' => [
@@ -110,12 +109,11 @@ final class QueueBootloader extends Bootloader
                     ],
                 ],
                 'registry' => [
-                    'handlers' => [
-                        MailQueue::JOB_NAME => MailJob::class,
-                    ],
+                    'handlers' => [],
                 ],
                 'driverAliases' => [
-                    'sync' => SyncDriver::class
+                    'sync' => SyncDriver::class,
+                    'null' => NullDriver::class,
                 ],
             ]
         );
