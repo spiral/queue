@@ -4,13 +4,10 @@ declare(strict_types=1);
 
 namespace Spiral\Queue;
 
-final class Options implements OptionsInterface, \JsonSerializable
+class Options implements OptionsInterface, \JsonSerializable
 {
-    /** @var int|null */
-    private $delay;
-
-    /** @var string|null */
-    private $queue;
+    private ?int $delay = null;
+    private ?string $queue = null;
 
     public function withQueue(?string $queue): self
     {
@@ -38,11 +35,7 @@ final class Options implements OptionsInterface, \JsonSerializable
         return $this->delay;
     }
 
-    /**
-     * @return array|mixed
-     */
-    #[\ReturnTypeWillChange]
-    public function jsonSerialize()
+    public function jsonSerialize(): array
     {
         return [
             'delay' => $this->delay,

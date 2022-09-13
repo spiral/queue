@@ -5,25 +5,29 @@ declare(strict_types=1);
 namespace Spiral\Queue\Config;
 
 use Spiral\Core\Container\Autowire;
+use Spiral\Core\CoreInterceptorInterface;
 use Spiral\Core\InjectableConfig;
-use Spiral\Queue\DefaultSerializer;
 use Spiral\Queue\Exception\InvalidArgumentException;
-use Spiral\Queue\SerializerInterface;
+use Spiral\Serializer\SerializerInterface;
 
 final class QueueConfig extends InjectableConfig
 {
     public const CONFIG = 'queue';
 
-    protected $config = [
+    protected array $config = [
         'default' => 'sync',
         'aliases' => [],
         'driverAliases' => [],
         'connections' => [],
-        'defaultSerializer' => null,
         'registry' => [
             'handlers' => [],
             'serializers' => [],
         ],
+        'interceptors' => [
+            'push' => [],
+            'consume' => [],
+        ],
+        'defaultSerializer' => null,
     ];
 
     /**
@@ -31,7 +35,27 @@ final class QueueConfig extends InjectableConfig
      */
     public function getAliases(): array
     {
-        return (array)($this->config['aliases'] ?? []);
+        return $this->config['aliases'];
+    }
+
+    /**
+     * Get consumer interceptors
+     *
+     * @return array<class-string<CoreInterceptorInterface>|CoreInterceptorInterface|Autowire>
+     */
+    public function getConsumeInterceptors(): array
+    {
+        return (array)($this->config['interceptors']['consume'] ?? []);
+    }
+
+    /**
+     * Get pusher interceptors
+     *
+     * @return array<class-string<CoreInterceptorInterface>|CoreInterceptorInterface|Autowire>
+     */
+    public function getPushInterceptors(): array
+    {
+        return (array)($this->config['interceptors']['push'] ?? []);
     }
 
     /**
@@ -40,10 +64,6 @@ final class QueueConfig extends InjectableConfig
      */
     public function getDefaultDriver(): string
     {
-        if (!isset($this->config['default']) || empty($this->config['default'])) {
-            throw new InvalidArgumentException('Default queue connection is not defined.');
-        }
-
         if (!\is_string($this->config['default'])) {
             throw new InvalidArgumentException('Default queue connection config value must be a string');
         }
@@ -75,14 +95,14 @@ final class QueueConfig extends InjectableConfig
         if (isset($driverAliases[$driver])) {
             if (!\is_string($this->config['driverAliases'][$driver])) {
                 throw new InvalidArgumentException(
-                    sprintf('Driver alias for `%s` value must be a string', $driver)
+                    \sprintf('Driver alias for `%s` value must be a string', $driver)
                 );
             }
 
             $driver = $driverAliases[$driver];
         }
 
-        return array_filter($connections, static function (array $connection) use ($driverAliases, $driver): bool {
+        return \array_filter($connections, static function (array $connection) use ($driverAliases, $driver): bool {
             if (empty($connection['driver'])) {
                 return false;
             }
@@ -106,7 +126,7 @@ final class QueueConfig extends InjectableConfig
         }
 
         if (!isset($connections[$name]['driver'])) {
-            throw new InvalidArgumentException(sprintf('Driver for queue connection `%s` is not defined.', $name));
+            throw new InvalidArgumentException(\sprintf('Driver for queue connection `%s` is not defined.', $name));
         }
 
         $connection = $connections[$name];
@@ -114,7 +134,7 @@ final class QueueConfig extends InjectableConfig
 
         if (!\is_string($driver)) {
             throw new InvalidArgumentException(
-                sprintf('Driver for queue connection `%s` value must be a string', $name)
+                \sprintf('Driver for queue connection `%s` value must be a string', $name)
             );
         }
 
@@ -124,7 +144,7 @@ final class QueueConfig extends InjectableConfig
 
         if (!\is_string($connection['driver'])) {
             throw new InvalidArgumentException(
-                sprintf('Driver alias for queue connection `%s` value must be a string', $name)
+                \sprintf('Driver alias for queue connection `%s` value must be a string', $name)
             );
         }
 
@@ -139,19 +159,16 @@ final class QueueConfig extends InjectableConfig
         return (array)($this->config['registry']['handlers'] ?? []);
     }
 
-    /**
-     * @psalm-return array<string, SerializerInterface|class-string|Autowire>
-     */
     public function getRegistrySerializers(): array
     {
         return (array)($this->config['registry']['serializers'] ?? []);
     }
 
     /**
-     * @psalm-return SerializerInterface|class-string|Autowire
+     * @psalm-return SerializerInterface|class-string|Autowire|null
      */
-    public function getDefaultSerializer()
+    public function getDefaultSerializer(): SerializerInterface|string|Autowire|null
     {
-        return $this->config['defaultSerializer'] ?? new DefaultSerializer();
+        return $this->config['defaultSerializer'] ?? null;
     }
 }

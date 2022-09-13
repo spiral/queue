@@ -6,9 +6,8 @@ namespace Spiral\Tests\Queue\Config;
 
 use Spiral\Core\Container\Autowire;
 use Spiral\Queue\Config\QueueConfig;
-use Spiral\Queue\DefaultSerializer;
 use Spiral\Queue\Exception\InvalidArgumentException;
-use Spiral\Queue\PhpSerializer;
+use Spiral\Serializer\Serializer\JsonSerializer;
 use Spiral\Tests\Queue\TestCase;
 
 final class QueueConfigTest extends TestCase
@@ -20,6 +19,28 @@ final class QueueConfigTest extends TestCase
         ]);
 
         $this->assertSame(['foo', 'bar'], $config->getAliases());
+    }
+
+    public function testConsumeInterceptors(): void
+    {
+        $config = new QueueConfig([
+            'interceptors' => [
+                'consume' => ['foo', 'bar'],
+            ],
+        ]);
+
+        $this->assertSame(['foo', 'bar'], $config->getConsumeInterceptors());
+    }
+
+    public function testPushInterceptors(): void
+    {
+        $config = new QueueConfig([
+            'interceptors' => [
+                'push' => ['foo', 'bar'],
+            ],
+        ]);
+
+        $this->assertSame(['foo', 'bar'], $config->getPushInterceptors());
     }
 
     public function testGetNotExistsAliases(): void
@@ -35,16 +56,6 @@ final class QueueConfigTest extends TestCase
             'default' => 'foo',
         ]);
         $this->assertSame('foo', $config->getDefaultDriver());
-    }
-
-    public function testGetsEmptyDefaultDriverShouldThrowAnException(): void
-    {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectErrorMessage('Default queue connection is not defined.');
-
-        $config = new QueueConfig();
-
-        $config->getDefaultDriver();
     }
 
     public function testGetsNonStringDefaultDriverShouldThrowAnException(): void
@@ -257,21 +268,20 @@ final class QueueConfigTest extends TestCase
     }
 
     /** @dataProvider defaultSerializerDataProvider */
-    public function testGetDefaultSerializer($serializer, $expected): void
+    public function testGetDefaultSerializer(array $config, mixed $expected): void
     {
-        $config = new QueueConfig([
-            'defaultSerializer' => $serializer
-        ]);
+        $config = new QueueConfig($config);
 
         $this->assertEquals($expected, $config->getDefaultSerializer());
     }
 
-    public function defaultSerializerDataProvider(): \Traversable
+    public function defaultSerializerDataProvider(): \Generator
     {
-        yield [null, new DefaultSerializer()];
-        yield ['class-string', 'class-string'];
-        yield [PhpSerializer::class, PhpSerializer::class];
-        yield [new DefaultSerializer(), new DefaultSerializer()];
-        yield [new Autowire(PhpSerializer::class), new Autowire(PhpSerializer::class)];
+        yield [[], null];
+        yield [['defaultSerializer' => null], null];
+        yield [['defaultSerializer' => 'json'], 'json'];
+        yield [['defaultSerializer' => JsonSerializer::class], JsonSerializer::class];
+        yield [['defaultSerializer' => new JsonSerializer ()], new JsonSerializer()];
+        yield [['defaultSerializer' => new Autowire(JsonSerializer::class)], new Autowire(JsonSerializer::class)];
     }
 }

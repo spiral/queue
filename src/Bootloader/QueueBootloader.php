@@ -5,14 +5,17 @@ declare(strict_types=1);
 namespace Spiral\Queue\Bootloader;
 
 use Psr\Container\ContainerInterface;
+use Psr\EventDispatcher\EventDispatcherInterface;
 use Spiral\Boot\AbstractKernel;
 use Spiral\Boot\Bootloader\Bootloader;
 use Spiral\Boot\EnvironmentInterface;
 use Spiral\Config\ConfiguratorInterface;
 use Spiral\Config\Patch\Append;
-use Spiral\Core\Container;
+use Spiral\Core\BinderInterface;
 use Spiral\Core\Container\Autowire;
+use Spiral\Core\CoreInterceptorInterface;
 use Spiral\Core\FactoryInterface;
+use Spiral\Core\InterceptableCore;
 use Spiral\Queue\Config\QueueConfig;
 use Spiral\Queue\ContainerRegistry;
 use Spiral\Queue\Core\QueueInjector;
@@ -21,59 +24,80 @@ use Spiral\Queue\Driver\SyncDriver;
 use Spiral\Queue\Failed\FailedJobHandlerInterface;
 use Spiral\Queue\Failed\LogFailedJobHandler;
 use Spiral\Queue\HandlerRegistryInterface;
+use Spiral\Queue\Interceptor\Consume\ErrorHandlerInterceptor;
+use Spiral\Queue\Interceptor\Consume\Handler;
+use Spiral\Queue\Interceptor\Consume\Core as ConsumeCore;
+use Spiral\Queue\Interceptor\Push\Core as PushCore;
+use Spiral\Queue\Queue;
 use Spiral\Queue\QueueConnectionProviderInterface;
 use Spiral\Queue\QueueInterface;
 use Spiral\Queue\QueueManager;
 use Spiral\Queue\QueueRegistry;
-use Spiral\Queue\SerializerInterface;
-use Spiral\Queue\SerializerRegistry;
 use Spiral\Queue\SerializerRegistryInterface;
 
 final class QueueBootloader extends Bootloader
 {
     protected const SINGLETONS = [
         HandlerRegistryInterface::class => QueueRegistry::class,
+        SerializerRegistryInterface::class => QueueRegistry::class,
         FailedJobHandlerInterface::class => LogFailedJobHandler::class,
         QueueConnectionProviderInterface::class => QueueManager::class,
-        SerializerRegistryInterface::class => SerializerRegistry::class,
-        SerializerInterface::class => SerializerRegistryInterface::class,
         QueueManager::class => [self::class, 'initQueueManager'],
         QueueRegistry::class => [self::class, 'initRegistry'],
-        SerializerRegistry::class => [self::class, 'initSerializerRegistry'],
+        Handler::class => [self::class, 'initHandler'],
+        QueueInterface::class => [self::class, 'initQueue'],
     ];
 
-    /** @var ConfiguratorInterface */
-    private $config;
-
-    public function __construct(ConfiguratorInterface $config)
-    {
-        $this->config = $config;
+    public function __construct(
+        private readonly ConfiguratorInterface $config
+    ) {
     }
 
-    public function boot(Container $container, EnvironmentInterface $env, AbstractKernel $kernel): void
-    {
+    public function init(
+        ContainerInterface $container,
+        BinderInterface $binder,
+        EnvironmentInterface $env,
+        AbstractKernel $kernel
+    ): void {
         $this->initQueueConfig($env);
-        $this->registerQueue($container);
 
         $this->registerDriverAlias(SyncDriver::class, 'sync');
-        $container->bindInjector(QueueInterface::class, QueueInjector::class);
+        $binder->bindInjector(QueueInterface::class, QueueInjector::class);
 
-        $kernel->started(static function () use ($container): void {
-            $registry = $container->get(HandlerRegistryInterface::class);
+        $kernel->booted(static function () use ($container): void {
+            $registry = $container->get(QueueRegistry::class);
             $config = $container->get(QueueConfig::class);
-            $serializersRegistry = $container->get(SerializerRegistryInterface::class);
 
             foreach ($config->getRegistryHandlers() as $jobType => $handler) {
                 $registry->setHandler($jobType, $handler);
             }
 
             foreach ($config->getRegistrySerializers() as $jobType => $serializer) {
-                if ($serializer instanceof Autowire || \is_string($serializer)) {
-                    $serializer = $container->get($serializer);
-                }
-                $serializersRegistry->addSerializer($jobType, $serializer);
+                $registry->setSerializer($jobType, $serializer);
             }
         });
+    }
+
+    /**
+     * @param class-string<CoreInterceptorInterface>|CoreInterceptorInterface|Autowire $interceptor
+     */
+    public function addConsumeInterceptor(string|CoreInterceptorInterface|Autowire $interceptor): void
+    {
+        $this->config->modify(
+            QueueConfig::CONFIG,
+            new Append('interceptors.consume', null, $interceptor)
+        );
+    }
+
+    /**
+     * @param class-string<CoreInterceptorInterface>|CoreInterceptorInterface|Autowire $interceptor
+     */
+    public function addPushInterceptor(string|CoreInterceptorInterface|Autowire $interceptor): void
+    {
+        $this->config->modify(
+            QueueConfig::CONFIG,
+            new Append('interceptors.push', null, $interceptor)
+        );
     }
 
     public function registerDriverAlias(string $driverClass, string $alias): void
@@ -89,30 +113,55 @@ final class QueueBootloader extends Bootloader
         return $factory->make(QueueManager::class);
     }
 
-    protected function initRegistry(ContainerInterface $container, ContainerRegistry $registry)
-    {
-        return new QueueRegistry($container, $registry);
+    protected function initRegistry(
+        ContainerInterface $container,
+        FactoryInterface $factory,
+        ContainerRegistry $registry
+    ) {
+        return new QueueRegistry($container, $factory, $registry);
     }
 
-    protected function initSerializerRegistry(Container $container, QueueConfig $config): SerializerRegistry
-    {
-        $default = $config->getDefaultSerializer();
+    protected function initHandler(
+        ConsumeCore $core,
+        QueueConfig $config,
+        ContainerInterface $container,
+        FactoryInterface $factory,
+        ?EventDispatcherInterface $dispatcher = null
+    ): Handler {
+        $core = new InterceptableCore($core, $dispatcher);
 
-        if ($default instanceof Autowire || \is_string($default)) {
-            $default = $container->get($default);
+        foreach ($config->getConsumeInterceptors() as $interceptor) {
+            if (\is_string($interceptor)) {
+                $interceptor = $container->get($interceptor);
+            } elseif ($interceptor instanceof Autowire) {
+                $interceptor = $interceptor->resolve($factory);
+            }
+
+            \assert($interceptor instanceof CoreInterceptorInterface);
+            $core->addInterceptor($interceptor);
         }
 
-        return new SerializerRegistry($default);
+        return new Handler($core);
     }
 
-    private function registerQueue(Container $container): void
-    {
-        $container->bindSingleton(
-            QueueInterface::class,
-            static function (QueueManager $manager): QueueInterface {
-                return $manager->getConnection();
+    protected function initQueue(
+        QueueConfig $config,
+        QueueConnectionProviderInterface $manager,
+        ContainerInterface $container,
+        ?EventDispatcherInterface $dispatcher = null
+    ): Queue {
+        $core = new InterceptableCore(new PushCore($manager->getConnection()), $dispatcher);
+
+        foreach ($config->getPushInterceptors() as $interceptor) {
+            if (\is_string($interceptor) || $interceptor instanceof Autowire) {
+                $interceptor = $container->get($interceptor);
             }
-        );
+
+            \assert($interceptor instanceof CoreInterceptorInterface);
+            $core->addInterceptor($interceptor);
+        }
+
+        return new Queue($core);
     }
 
     private function initQueueConfig(EnvironmentInterface $env): void
@@ -133,6 +182,12 @@ final class QueueBootloader extends Bootloader
                 'driverAliases' => [
                     'sync' => SyncDriver::class,
                     'null' => NullDriver::class,
+                ],
+                'interceptors' => [
+                    'consume' => [
+                        ErrorHandlerInterceptor::class,
+                    ],
+                    'push' => [],
                 ],
             ]
         );
