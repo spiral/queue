@@ -6,8 +6,6 @@ namespace Spiral\Queue\Interceptor\Push;
 
 use Spiral\Core\ContainerScope;
 use Spiral\Core\CoreInterface;
-use Spiral\Interceptors\Context\CallContext;
-use Spiral\Interceptors\HandlerInterface;
 use Spiral\Queue\Options;
 use Spiral\Queue\OptionsInterface;
 use Spiral\Queue\QueueInterface;
@@ -18,7 +16,7 @@ use Spiral\Telemetry\TracerInterface;
  * @internal
  * @psalm-type TParameters = array{options: ?OptionsInterface, payload: mixed}
  */
-final class Core implements CoreInterface, HandlerInterface
+final class Core implements CoreInterface
 {
     public function __construct(
         private readonly QueueInterface $connection,
@@ -27,7 +25,6 @@ final class Core implements CoreInterface, HandlerInterface
 
     /**
      * @param-assert TParameters $parameters
-     * @deprecated
      */
     public function callAction(
         string $controller,
@@ -57,15 +54,6 @@ final class Core implements CoreInterface, HandlerInterface
                 'queue.handler' => $controller,
             ],
         );
-    }
-
-    public function handle(CallContext $context): mixed
-    {
-        $args = $context->getArguments();
-        $controller = $context->getTarget()->getPath()[0];
-        $action = $context->getTarget()->getPath()[1];
-
-        return $this->callAction($controller, $action, $args);
     }
 
     private function getTracer(): TracerInterface

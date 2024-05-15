@@ -10,7 +10,7 @@ use Spiral\Boot\{AbstractKernel, EnvironmentInterface};
 use Spiral\Boot\Bootloader\Bootloader;
 use Spiral\Config\ConfiguratorInterface;
 use Spiral\Config\Patch\Append;
-use Spiral\Core\{BinderInterface, FactoryInterface, InterceptableCore, InterceptorPipeline};
+use Spiral\Core\{BinderInterface, FactoryInterface, InterceptableCore};
 use Spiral\Core\Container\Autowire;
 use Spiral\Core\CoreInterceptorInterface;
 use Spiral\Queue\{JobHandlerLocatorListener,
@@ -20,17 +20,13 @@ use Spiral\Queue\{JobHandlerLocatorListener,
     QueueRegistry,
     SerializerLocatorListener,
     SerializerRegistryInterface};
-use Spiral\Interceptors\InterceptorInterface;
 use Spiral\Queue\Config\QueueConfig;
 use Spiral\Queue\ContainerRegistry;
 use Spiral\Queue\Core\QueueInjector;
 use Spiral\Queue\Driver\{NullDriver, SyncDriver};
 use Spiral\Queue\Failed\{FailedJobHandlerInterface, LogFailedJobHandler};
 use Spiral\Queue\HandlerRegistryInterface;
-use Spiral\Queue\Interceptor\Consume\Core as ConsumeCore;
-use Spiral\Queue\Interceptor\Consume\ErrorHandlerInterceptor;
-use Spiral\Queue\Interceptor\Consume\Handler;
-use Spiral\Queue\Interceptor\Consume\RetryPolicyInterceptor;
+use Spiral\Queue\Interceptor\Consume\{Core as ConsumeCore, ErrorHandlerInterceptor, Handler, RetryPolicyInterceptor};
 use Spiral\Telemetry\Bootloader\TelemetryBootloader;
 use Spiral\Telemetry\TracerFactoryInterface;
 use Spiral\Tokenizer\Bootloader\TokenizerListenerBootloader;
@@ -143,7 +139,7 @@ final class QueueBootloader extends Bootloader
         TracerFactoryInterface $tracerFactory,
         ?EventDispatcherInterface $dispatcher = null,
     ): Handler {
-        $pipeline = (new InterceptorPipeline($dispatcher))->withHandler($core);
+        $core = new InterceptableCore($core, $dispatcher);
 
         foreach ($config->getConsumeInterceptors() as $interceptor) {
             if (\is_string($interceptor)) {
@@ -152,11 +148,11 @@ final class QueueBootloader extends Bootloader
                 $interceptor = $interceptor->resolve($factory);
             }
 
-            \assert($interceptor instanceof CoreInterceptorInterface || $interceptor instanceof InterceptorInterface);
-            $pipeline->addInterceptor($interceptor);
+            \assert($interceptor instanceof CoreInterceptorInterface);
+            $core->addInterceptor($interceptor);
         }
 
-        return new Handler($pipeline, $tracerFactory);
+        return new Handler($core, $tracerFactory);
     }
 
     private function initQueueConfig(EnvironmentInterface $env): void
