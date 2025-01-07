@@ -11,12 +11,12 @@ use Spiral\Queue\Exception\RetryableExceptionInterface;
 final class RetryPolicy implements RetryPolicyInterface
 {
     /**
-     * @var int<0, max>
+     * @var positive-int|0
      */
     private readonly int $maxAttempts;
 
     /**
-     * @var int<0, max>
+     * @var positive-int|0
      */
     private readonly int $delay;
 
@@ -50,7 +50,7 @@ final class RetryPolicy implements RetryPolicyInterface
     }
 
     /**
-     * @param int<0, max> $attempts
+     * @param positive-int|0 $attempts
      *
      * @return positive-int
      */
@@ -60,7 +60,7 @@ final class RetryPolicy implements RetryPolicyInterface
     }
 
     /**
-     * @param int<0, max> $attempts
+     * @param positive-int|0 $attempts
      */
     public function isRetryable(\Throwable $exception, int $attempts = 0): bool
     {

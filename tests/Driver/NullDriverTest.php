@@ -23,7 +23,7 @@ final class NullDriverTest extends TestCase
     public function testJobShouldBePushed(mixed $payload): void
     {
         $id = $this->queue->push('foo', $payload);
-        self::assertNotNull($id);
+        $this->assertNotNull($id);
     }
 
     public static function payloadDataProvider(): \Traversable
