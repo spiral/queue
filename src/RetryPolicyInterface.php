@@ -7,12 +7,12 @@ namespace Spiral\Queue;
 interface RetryPolicyInterface
 {
     /**
-     * @param int<0, max> $attempts
+     * @param positive-int|0 $attempts
      */
     public function isRetryable(\Throwable $exception, int $attempts = 0): bool;
 
     /**
-     * @param int<0, max> $attempts
+     * @param positive-int|0 $attempts
      *
      * @return positive-int
      */

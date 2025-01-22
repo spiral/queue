@@ -74,6 +74,6 @@ final class QueueManagerTest extends TestCase
 
         $queue = $this->manager->getConnection('user-data');
 
-        self::assertSame($queue, $this->manager->getConnection('sync'));
+        $this->assertSame($queue, $this->manager->getConnection('sync'));
     }
 }

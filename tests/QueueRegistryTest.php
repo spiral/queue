@@ -24,7 +24,8 @@ final class QueueRegistryTest extends TestCase
     private Container $mockContainer;
     /** @var \Mockery\LegacyMockInterface|\Mockery\MockInterface|HandlerRegistryInterface */
     private $fallbackHandlers;
-    private QueueRegistry $registry;
+    /** @var QueueRegistry */
+    private $registry;
 
     protected function setUp(): void
     {
@@ -44,7 +45,7 @@ final class QueueRegistryTest extends TestCase
         $this->fallbackHandlers->shouldReceive('getHandler')->once()->with('foo')
             ->andReturn($handler = m::mock(HandlerInterface::class));
 
-        self::assertSame($handler, $this->registry->getHandler('foo'));
+        $this->assertSame($handler, $this->registry->getHandler('foo'));
     }
 
     public function testGetsRegisteredHandler(): void
@@ -52,7 +53,7 @@ final class QueueRegistryTest extends TestCase
         $handler = m::mock(HandlerInterface::class);
         $this->registry->setHandler('foo', $handler);
 
-        self::assertSame($handler, $this->registry->getHandler('foo'));
+        $this->assertSame($handler, $this->registry->getHandler('foo'));
     }
 
     public function testGetsRegisteredHandlerFromContainer(): void
@@ -62,7 +63,7 @@ final class QueueRegistryTest extends TestCase
         $this->registry->setHandler('foo', 'bar');
         $this->mockContainer->bind('bar', $handler);
 
-        self::assertSame($handler, $this->registry->getHandler('foo'));
+        $this->assertSame($handler, $this->registry->getHandler('foo'));
     }
 
     public function testDefaultSerializerIsNull(): void
@@ -74,7 +75,7 @@ final class QueueRegistryTest extends TestCase
             'json' => new JsonSerializer()
         ]), 'json'));
 
-        self::assertInstanceOf(JsonSerializer::class, $this->registry->getSerializer());
+        $this->assertInstanceOf(JsonSerializer::class, $this->registry->getSerializer());
     }
 
     #[DataProvider('serializersDataProvider')]
@@ -85,7 +86,7 @@ final class QueueRegistryTest extends TestCase
         $this->mockContainer->bind(QueueConfig::class, new QueueConfig(['defaultSerializer' => $serializer]));
         $this->mockContainer->bind(SerializerRegistryInterface::class, $registry);
 
-        self::assertInstanceOf(JsonSerializer::class, $this->registry->getSerializer());
+        $this->assertInstanceOf(JsonSerializer::class, $this->registry->getSerializer());
     }
 
     #[DataProvider('serializersDataProvider')]
@@ -93,12 +94,12 @@ final class QueueRegistryTest extends TestCase
     {
         $this->mockContainer->bind(SerializerRegistryInterface::class, $registry);
 
-        self::assertFalse($this->registry->hasSerializer('foo'));
+        $this->assertFalse($this->registry->hasSerializer('foo'));
 
         $this->registry->setSerializer('foo', $serializer);
 
-        self::assertTrue($this->registry->hasSerializer('foo'));
-        self::assertInstanceOf(SerializerInterface::class, $this->registry->getSerializer('foo'));
+        $this->assertTrue($this->registry->hasSerializer('foo'));
+        $this->assertInstanceOf(SerializerInterface::class, $this->registry->getSerializer('foo'));
     }
 
     public static function serializersDataProvider(): \Traversable

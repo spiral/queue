@@ -51,7 +51,7 @@ final class RetryPolicyInterceptorTest extends TestCase
             ->with('foo', 'bar', [])
             ->willReturn('result');
 
-        self::assertSame('result', $this->interceptor->process('foo', 'bar', [], $this->core));
+        $this->assertSame('result', $this->interceptor->process('foo', 'bar', [], $this->core));
     }
 
     #[DataProvider('jobNameDataProvider')]
@@ -100,8 +100,8 @@ final class RetryPolicyInterceptorTest extends TestCase
         try {
             $this->interceptor->process($name, 'bar', [], $this->core);
         } catch (RetryException $e) {
-            self::assertSame(1, $e->getOptions()->getDelay());
-            self::assertSame(['attempts' => ['1']], $e->getOptions()->getHeaders());
+            $this->assertSame(1, $e->getOptions()->getDelay());
+            $this->assertSame(['attempts' => ['1']], $e->getOptions()->getHeaders());
         }
     }
 
@@ -121,8 +121,8 @@ final class RetryPolicyInterceptorTest extends TestCase
         try {
             $this->interceptor->process($name, 'bar', [], $this->core);
         } catch (RetryException $e) {
-            self::assertSame(4, $e->getOptions()->getDelay());
-            self::assertSame(['attempts' => ['1']], $e->getOptions()->getHeaders());
+            $this->assertSame(4, $e->getOptions()->getDelay());
+            $this->assertSame(['attempts' => ['1']], $e->getOptions()->getHeaders());
         }
     }
 
@@ -147,8 +147,8 @@ final class RetryPolicyInterceptorTest extends TestCase
                 $this->core
             );
         } catch (RetryException $e) {
-            self::assertSame(8, $e->getOptions()->getDelay());
-            self::assertSame(['attempts' => ['2']], $e->getOptions()->getHeaders());
+            $this->assertSame(8, $e->getOptions()->getDelay());
+            $this->assertSame(['attempts' => ['2']], $e->getOptions()->getHeaders());
         }
     }
 
@@ -175,8 +175,8 @@ final class RetryPolicyInterceptorTest extends TestCase
                 $this->core
             );
         } catch (RetryException $e) {
-            self::assertSame(8, $e->getOptions()->getDelay());
-            self::assertSame(['attempts' => ['2']], $e->getOptions()->getHeaders());
+            $this->assertSame(8, $e->getOptions()->getDelay());
+            $this->assertSame(['attempts' => ['2']], $e->getOptions()->getHeaders());
         }
     }
 
@@ -213,8 +213,8 @@ final class RetryPolicyInterceptorTest extends TestCase
                 $this->core
             );
         } catch (RetryException $e) {
-            self::assertSame(5, $e->getOptions()->getDelay());
-            self::assertSame(['attempts' => ['2']], $e->getOptions()->getHeaders());
+            $this->assertSame(5, $e->getOptions()->getDelay());
+            $this->assertSame(['attempts' => ['2']], $e->getOptions()->getHeaders());
         }
     }
 
@@ -243,8 +243,8 @@ final class RetryPolicyInterceptorTest extends TestCase
                 $this->core
             );
         } catch (RetryException $e) {
-            self::assertSame(8, $e->getOptions()->getDelay());
-            self::assertSame(['attempts' => ['2']], $e->getOptions()->getHeaders());
+            $this->assertSame(8, $e->getOptions()->getDelay());
+            $this->assertSame(['attempts' => ['2']], $e->getOptions()->getHeaders());
         }
     }
 

@@ -19,7 +19,7 @@ final class QueueConfigTest extends TestCase
             'aliases' => ['foo', 'bar'],
         ]);
 
-        self::assertSame(['foo', 'bar'], $config->getAliases());
+        $this->assertSame(['foo', 'bar'], $config->getAliases());
     }
 
     public function testConsumeInterceptors(): void
@@ -30,7 +30,7 @@ final class QueueConfigTest extends TestCase
             ],
         ]);
 
-        self::assertSame(['foo', 'bar'], $config->getConsumeInterceptors());
+        $this->assertSame(['foo', 'bar'], $config->getConsumeInterceptors());
     }
 
     public function testPushInterceptors(): void
@@ -41,14 +41,14 @@ final class QueueConfigTest extends TestCase
             ],
         ]);
 
-        self::assertSame(['foo', 'bar'], $config->getPushInterceptors());
+        $this->assertSame(['foo', 'bar'], $config->getPushInterceptors());
     }
 
     public function testGetNotExistsAliases(): void
     {
         $config = new QueueConfig();
 
-        self::assertSame([], $config->getAliases());
+        $this->assertSame([], $config->getAliases());
     }
 
     public function testGetsDefaultDriver(): void
@@ -56,7 +56,7 @@ final class QueueConfigTest extends TestCase
         $config = new QueueConfig([
             'default' => 'foo',
         ]);
-        self::assertSame('foo', $config->getDefaultDriver());
+        $this->assertSame('foo', $config->getDefaultDriver());
     }
 
     public function testGetsNonStringDefaultDriverShouldThrowAnException(): void
@@ -75,14 +75,14 @@ final class QueueConfigTest extends TestCase
             'driverAliases' => ['foo', 'bar'],
         ]);
 
-        self::assertSame(['foo', 'bar'], $config->getDriverAliases());
+        $this->assertSame(['foo', 'bar'], $config->getDriverAliases());
     }
 
     public function testGetNotExistsDriverAliases(): void
     {
         $config = new QueueConfig();
 
-        self::assertSame([], $config->getDriverAliases());
+        $this->assertSame([], $config->getDriverAliases());
     }
 
     public function testGetsConnectionsWithoutDriver(): void
@@ -91,14 +91,14 @@ final class QueueConfigTest extends TestCase
             'connections' => ['foo', 'bar'],
         ]);
 
-        self::assertSame(['foo', 'bar'], $config->getConnections());
+        $this->assertSame(['foo', 'bar'], $config->getConnections());
     }
 
     public function testGetsNotExistsConnections(): void
     {
         $config = new QueueConfig();
 
-        self::assertSame([], $config->getConnections());
+        $this->assertSame([], $config->getConnections());
     }
 
     public function testGetsConnectionsWithSpecificDriverAlias(): void
@@ -118,7 +118,7 @@ final class QueueConfigTest extends TestCase
             ],
         ]);
 
-        self::assertSame([
+        $this->assertSame([
             'foo' => [
                 'driver' => 'baz',
             ],
@@ -142,7 +142,7 @@ final class QueueConfigTest extends TestCase
             ],
         ]);
 
-        self::assertSame([
+        $this->assertSame([
             'foo' => [
                 'driver' => 'alias',
             ],
@@ -169,7 +169,7 @@ final class QueueConfigTest extends TestCase
             ],
         ]);
 
-        self::assertSame([
+        $this->assertSame([
             'driver' => 'baz',
         ], $config->getConnection('foo'));
     }
@@ -240,14 +240,14 @@ final class QueueConfigTest extends TestCase
             ]
         ]);
 
-        self::assertSame(['foo', 'bar'], $config->getRegistryHandlers());
+        $this->assertSame(['foo', 'bar'], $config->getRegistryHandlers());
     }
 
     public function testGetsNotExistsRegistryHandlers(): void
     {
         $config = new QueueConfig();
 
-        self::assertSame([], $config->getRegistryHandlers());
+        $this->assertSame([], $config->getRegistryHandlers());
     }
 
     public function testGetRegistrySerializers(): void
@@ -258,14 +258,14 @@ final class QueueConfigTest extends TestCase
             ]
         ]);
 
-        self::assertSame(['foo' => 'some', 'bar' => 'other'], $config->getRegistrySerializers());
+        $this->assertSame(['foo' => 'some', 'bar' => 'other'], $config->getRegistrySerializers());
     }
 
     public function testGetNotExistsRegistrySerializers(): void
     {
         $config = new QueueConfig();
 
-        self::assertSame([], $config->getRegistrySerializers());
+        $this->assertSame([], $config->getRegistrySerializers());
     }
 
     #[DataProvider('defaultSerializerDataProvider')]
@@ -273,7 +273,7 @@ final class QueueConfigTest extends TestCase
     {
         $config = new QueueConfig($config);
 
-        self::assertEquals($expected, $config->getDefaultSerializer());
+        $this->assertEquals($expected, $config->getDefaultSerializer());
     }
 
     public static function defaultSerializerDataProvider(): \Generator
