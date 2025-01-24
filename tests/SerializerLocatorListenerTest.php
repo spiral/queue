@@ -31,7 +31,7 @@ final class SerializerLocatorListenerTest extends TestCase
         $registry = new QueueRegistry(
             $container,
             $container,
-            $this->createMock(HandlerRegistryInterface::class)
+            $this->createMock(HandlerRegistryInterface::class),
         );
 
         $reader = m::mock(ReaderInterface::class);
@@ -48,12 +48,12 @@ final class SerializerLocatorListenerTest extends TestCase
             'registry' => [
                 'handlers' => [
                     $handler::class => $handler::class,
-                ]
-            ]
+                ],
+            ],
         ]));
         $listener->listen(new \ReflectionClass($handler::class));
 
-        $this->assertEquals(new PhpSerializer(), $registry->getSerializer($handler::class));
+        self::assertEquals(new PhpSerializer(), $registry->getSerializer($handler::class));
     }
 
     public function testListenWithJobTypeFromAttribute(): void
@@ -67,7 +67,7 @@ final class SerializerLocatorListenerTest extends TestCase
         $registry = new QueueRegistry(
             $container,
             $container,
-            $this->createMock(HandlerRegistryInterface::class)
+            $this->createMock(HandlerRegistryInterface::class),
         );
 
         $reader = m::mock(ReaderInterface::class);
@@ -84,12 +84,12 @@ final class SerializerLocatorListenerTest extends TestCase
             'registry' => [
                 'handlers' => [
                     'test' => $handler::class,
-                ]
-            ]
+                ],
+            ],
         ]));
         $listener->listen(new \ReflectionClass($handler::class));
 
-        $this->assertEquals(new PhpSerializer(), $registry->getSerializer('test'));
+        self::assertEquals(new PhpSerializer(), $registry->getSerializer('test'));
     }
 
     public function testListenWithJobTypeFromClass(): void
@@ -103,7 +103,7 @@ final class SerializerLocatorListenerTest extends TestCase
         $registry = new QueueRegistry(
             $container,
             $container,
-            $this->createMock(HandlerRegistryInterface::class)
+            $this->createMock(HandlerRegistryInterface::class),
         );
 
         $reader = m::mock(ReaderInterface::class);
@@ -119,6 +119,6 @@ final class SerializerLocatorListenerTest extends TestCase
         $listener = new SerializerLocatorListener($reader, $registry, new QueueConfig());
         $listener->listen(new \ReflectionClass($handler::class));
 
-        $this->assertEquals(new PhpSerializer(), $registry->getSerializer($handler::class));
+        self::assertEquals(new PhpSerializer(), $registry->getSerializer($handler::class));
     }
 }

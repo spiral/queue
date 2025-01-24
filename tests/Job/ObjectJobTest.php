@@ -12,14 +12,7 @@ use Spiral\Tests\Queue\TestCase;
 
 final class ObjectJobTest extends TestCase
 {
-    /** @var Container */
-    private $container;
-
-    protected function setUp(): void
-    {
-        parent::setUp();
-        $this->container = new Container();
-    }
+    private Container $container;
 
     public function testPayloadObjectKeyIsRequired(): void
     {
@@ -42,9 +35,7 @@ final class ObjectJobTest extends TestCase
     public function testHandleWithHandleMethod(): void
     {
         $object = new class($this) {
-            public function __construct(private $testCase)
-            {
-            }
+            public function __construct(private $testCase) {}
 
             public function handle(string $name, string $id, ContainerInterface $container): void
             {
@@ -62,9 +53,7 @@ final class ObjectJobTest extends TestCase
     public function testHandleWithInvokeMethod(): void
     {
         $object = new class($this) {
-            public function __construct(private $testCase)
-            {
-            }
+            public function __construct(private $testCase) {}
 
             public function __invoke(string $name, string $id, ContainerInterface $container): void
             {
@@ -77,5 +66,11 @@ final class ObjectJobTest extends TestCase
         $job = new ObjectJob($this->container);
 
         $job->handle('foo', 'foo-id', ['object' => $object]);
+    }
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->container = new Container();
     }
 }

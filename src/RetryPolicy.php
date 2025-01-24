@@ -11,12 +11,12 @@ use Spiral\Queue\Exception\RetryableExceptionInterface;
 final class RetryPolicy implements RetryPolicyInterface
 {
     /**
-     * @var positive-int|0
+     * @var int<0, max>
      */
     private readonly int $maxAttempts;
 
     /**
-     * @var positive-int|0
+     * @var int<0, max>
      */
     private readonly int $delay;
 
@@ -29,28 +29,28 @@ final class RetryPolicy implements RetryPolicyInterface
     {
         if ($maxAttempts < 0) {
             throw new InvalidArgumentException(
-                \sprintf('Maximum attempts must be greater than or equal to zero: `%s` given.', $maxAttempts)
+                \sprintf('Maximum attempts must be greater than or equal to zero: `%s` given.', $maxAttempts),
             );
         }
         $this->maxAttempts = $maxAttempts;
 
         if ($delay < 0) {
             throw new InvalidArgumentException(
-                \sprintf('Delay must be greater than or equal to zero: `%s` given.', $delay)
+                \sprintf('Delay must be greater than or equal to zero: `%s` given.', $delay),
             );
         }
         $this->delay = $delay;
 
         if ($multiplier < 1) {
             throw new InvalidArgumentException(
-                \sprintf('Multiplier must be greater than zero: `%s` given.', $multiplier)
+                \sprintf('Multiplier must be greater than zero: `%s` given.', $multiplier),
             );
         }
         $this->multiplier = $multiplier;
     }
 
     /**
-     * @param positive-int|0 $attempts
+     * @param int<0, max> $attempts
      *
      * @return positive-int
      */
@@ -60,7 +60,7 @@ final class RetryPolicy implements RetryPolicyInterface
     }
 
     /**
-     * @param positive-int|0 $attempts
+     * @param int<0, max> $attempts
      */
     public function isRetryable(\Throwable $exception, int $attempts = 0): bool
     {

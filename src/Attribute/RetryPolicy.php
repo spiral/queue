@@ -25,22 +25,21 @@ use Spiral\Queue\RetryPolicy as Policy;
 class RetryPolicy
 {
     /**
-     * @param 0|positive-int $maxAttempts
+     * @param int<0, max> $maxAttempts
      * @param positive-int $delay in seconds.
      */
     public function __construct(
         protected readonly int $maxAttempts = 3,
         protected readonly int $delay = 1,
-        protected readonly float $multiplier = 1
-    ) {
-    }
+        protected readonly float $multiplier = 1,
+    ) {}
 
     public function getRetryPolicy(): RetryPolicyInterface
     {
         return new Policy(
             maxAttempts: $this->maxAttempts,
             delay: $this->delay,
-            multiplier: $this->multiplier
+            multiplier: $this->multiplier,
         );
     }
 }

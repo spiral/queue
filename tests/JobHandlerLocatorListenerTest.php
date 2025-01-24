@@ -23,7 +23,7 @@ final class JobHandlerLocatorListenerTest extends TestCase
         $registry = new QueueRegistry(
             new Container(),
             new Container(),
-            $this->createMock(HandlerRegistryInterface::class)
+            $this->createMock(HandlerRegistryInterface::class),
         );
 
         $reader = $this->createMock(ReaderInterface::class);
@@ -35,6 +35,6 @@ final class JobHandlerLocatorListenerTest extends TestCase
         $listener = new JobHandlerLocatorListener($reader, $registry);
         $listener->listen(new \ReflectionClass($handler::class));
 
-        $this->assertInstanceOf(HandlerInterface::class, $registry->getHandler('test'));
+        self::assertInstanceOf(HandlerInterface::class, $registry->getHandler('test'));
     }
 }
