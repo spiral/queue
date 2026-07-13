@@ -12,20 +12,11 @@ use Spiral\Tests\Queue\TestCase;
 
 final class LogFailedJobHandlerTest extends TestCase
 {
-    public static function payloadDataProvider(): \Traversable
-    {
-        yield [['baz' => 'baf']];
-        yield [new \stdClass()];
-        yield ['some string'];
-        yield [123];
-        yield [null];
-    }
-
     #[DataProvider('payloadDataProvider')]
     public function testHandle(mixed $payload): void
     {
         $handler = new LogFailedJobHandler(
-            $errHandler = m::mock(ExceptionReporterInterface::class),
+            $errHandler = m::mock(ExceptionReporterInterface::class)
         );
 
         $e = new \Exception('Something went wrong');
@@ -33,5 +24,14 @@ final class LogFailedJobHandlerTest extends TestCase
         $errHandler->shouldReceive('report')->once()->with($e);
 
         $handler->handle('foo', 'bar', 'baz', $payload, $e);
+    }
+
+    public static function payloadDataProvider(): \Traversable
+    {
+        yield [['baz' => 'baf']];
+        yield [new \stdClass()];
+        yield ['some string'];
+        yield [123];
+        yield [null];
     }
 }

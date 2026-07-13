@@ -26,13 +26,22 @@ final class SyncDriverTest extends TestCase
     private m\LegacyMockInterface|m\MockInterface|UuidFactoryInterface $factory;
     private UuidFactoryInterface $realfactory;
 
-    public static function payloadDataProvider(): \Traversable
+    protected function setUp(): void
     {
-        yield [['baz' => 'baf']];
-        yield [new \stdClass()];
-        yield ['some string'];
-        yield [123];
-        yield [null];
+        parent::setUp();
+
+        $container = new Container();
+        $container->bind(TracerInterface::class, new NullTracer($container));
+
+        $this->realfactory = Uuid::getFactory();
+        Uuid::setFactory($this->factory = m::mock(UuidFactoryInterface::class));
+
+        $this->queue = new SyncDriver(
+            new Handler(
+                $this->core = m::mock(CoreInterface::class),
+                new NullTracerFactory($container)
+            )
+        );
     }
 
     #[DataProvider('payloadDataProvider')]
@@ -47,13 +56,13 @@ final class SyncDriverTest extends TestCase
                 'queue' => 'default',
                 'id' => $uuid->toString(),
                 'payload' => $payload,
-                'headers' => [],
+                'headers' => []
             ])
             ->once();
 
         $id = $this->queue->push('foo', $payload);
 
-        self::assertSame($uuid->toString(), $id);
+        $this->assertSame($uuid->toString(), $id);
     }
 
     public function testJobWithHeadersShouldBePushed(): void
@@ -69,31 +78,22 @@ final class SyncDriverTest extends TestCase
                 'queue' => 'default',
                 'id' => $uuid->toString(),
                 'payload' => ['baz' => 'baf'],
-                'headers' => ['foo' => ['bar']],
+                'headers' => ['foo' => ['bar']]
             ])
             ->once();
 
         $id = $this->queue->push('foo', ['baz' => 'baf'], $options);
 
-        self::assertSame($uuid->toString(), $id);
+        $this->assertSame($uuid->toString(), $id);
     }
 
-    protected function setUp(): void
+    public static function payloadDataProvider(): \Traversable
     {
-        parent::setUp();
-
-        $container = new Container();
-        $container->bind(TracerInterface::class, new NullTracer($container));
-
-        $this->realfactory = Uuid::getFactory();
-        Uuid::setFactory($this->factory = m::mock(UuidFactoryInterface::class));
-
-        $this->queue = new SyncDriver(
-            new Handler(
-                $this->core = m::mock(CoreInterface::class),
-                new NullTracerFactory($container),
-            ),
-        );
+        yield [['baz' => 'baf']];
+        yield [new \stdClass()];
+        yield ['some string'];
+        yield [123];
+        yield [null];
     }
 
     protected function tearDown(): void

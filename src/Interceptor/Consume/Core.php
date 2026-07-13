@@ -6,8 +6,6 @@ namespace Spiral\Queue\Interceptor\Consume;
 
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Spiral\Core\CoreInterface;
-use Spiral\Interceptors\Context\CallContextInterface;
-use Spiral\Interceptors\HandlerInterface;
 use Spiral\Queue\Event\JobProcessed;
 use Spiral\Queue\Event\JobProcessing;
 use Spiral\Queue\HandlerRegistryInterface;
@@ -22,16 +20,16 @@ use Spiral\Queue\HandlerRegistryInterface;
  *     headers: array
  * }
  */
-final class Core implements CoreInterface, HandlerInterface
+final class Core implements CoreInterface
 {
     public function __construct(
         private readonly HandlerRegistryInterface $registry,
-        private readonly ?EventDispatcherInterface $dispatcher = null,
-    ) {}
+        private readonly ?EventDispatcherInterface $dispatcher = null
+    ) {
+    }
 
     /**
      * @param-assert TParameters $parameters
-     * @deprecated
      */
     public function callAction(string $controller, string $action, array $parameters = []): mixed
     {
@@ -51,15 +49,6 @@ final class Core implements CoreInterface, HandlerInterface
         return null;
     }
 
-    public function handle(CallContextInterface $context): mixed
-    {
-        $args = $context->getArguments();
-        $controller = $context->getTarget()->getPath()[0];
-        $action = $context->getTarget()->getPath()[1];
-
-        return $this->callAction($controller, $action, $args);
-    }
-
     /**
      * @param class-string $event
      * @param-assert TParameters $parameters
@@ -72,7 +61,7 @@ final class Core implements CoreInterface, HandlerInterface
             queue: $parameters['queue'],
             id: $parameters['id'],
             payload: $parameters['payload'],
-            headers: $parameters['headers'] ?? [],
+            headers: $parameters['headers'] ?? []
         ));
     }
 }

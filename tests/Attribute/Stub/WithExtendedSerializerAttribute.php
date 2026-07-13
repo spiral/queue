@@ -5,4 +5,6 @@ declare(strict_types=1);
 namespace Spiral\Tests\Queue\Attribute\Stub;
 
 #[ExtendedSerializer]
-final class WithExtendedSerializerAttribute {}
+final class WithExtendedSerializerAttribute
+{
+}

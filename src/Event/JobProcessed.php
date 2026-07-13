@@ -12,6 +12,7 @@ final class JobProcessed
         public readonly string $queue,
         public readonly string $id,
         public readonly mixed $payload,
-        public readonly array $headers = [],
-    ) {}
+        public readonly array $headers = []
+    ) {
+    }
 }

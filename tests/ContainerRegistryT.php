@@ -11,10 +11,18 @@ use Spiral\Queue\ContainerRegistry;
 use Spiral\Queue\Exception\JobException;
 use Spiral\Queue\HandlerInterface;
 
-final class ContainerRegistryTest extends TestCase
+final class ContainerRegistryT extends TestCase
 {
     private ContainerInterface|m\MockInterface $container;
     private ContainerRegistry $registry;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->container = m::mock(ContainerInterface::class);
+        $this->registry = new ContainerRegistry($this->container);
+    }
 
     public function testGetsHandlerByJobType(): void
     {
@@ -24,7 +32,7 @@ final class ContainerRegistryTest extends TestCase
 
         $this->registry->getHandler('mail.job');
 
-        self::assertSame($handler, $this->registry->getHandler('mail.job'));
+        $this->assertSame($handler, $this->registry->getHandler('mail.job'));
     }
 
     public function testGetsHandlerWithWrongInterface(): void
@@ -49,13 +57,5 @@ final class ContainerRegistryTest extends TestCase
             ->andThrow(new ContainerException("Undefined class or binding 'Mail\Job'"));
 
         $this->registry->getHandler('mail.job');
-    }
-
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        $this->container = m::mock(ContainerInterface::class);
-        $this->registry = new ContainerRegistry($this->container);
     }
 }

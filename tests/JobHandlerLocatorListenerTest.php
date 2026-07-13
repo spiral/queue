@@ -18,23 +18,23 @@ final class JobHandlerLocatorListenerTest extends TestCase
 {
     public function testListen(): void
     {
-        $handler = new class($this->createStub(InvokerInterface::class)) extends JobHandler {};
+        $handler = new class($this->createMock(InvokerInterface::class)) extends JobHandler {};
 
         $registry = new QueueRegistry(
             new Container(),
             new Container(),
-            $this->createStub(HandlerRegistryInterface::class),
+            $this->createMock(HandlerRegistryInterface::class)
         );
 
         $reader = $this->createMock(ReaderInterface::class);
         $reader
-            ->expects(self::once())
+            ->expects($this->once())
             ->method('firstClassMetadata')
             ->willReturn(new Attribute('test'));
 
         $listener = new JobHandlerLocatorListener($reader, $registry);
         $listener->listen(new \ReflectionClass($handler::class));
 
-        self::assertInstanceOf(HandlerInterface::class, $registry->getHandler('test'));
+        $this->assertInstanceOf(HandlerInterface::class, $registry->getHandler('test'));
     }
 }

@@ -10,25 +10,8 @@ class Options implements OptionsInterface, ExtendedOptionsInterface, \JsonSerial
      * @var array<non-empty-string, array<string>>
      */
     private array $headers = [];
-
     private ?int $delay = null;
     private ?string $queue = null;
-
-    public static function delayed(int $delay): Options
-    {
-        $options = new self();
-        $options->delay = $delay;
-
-        return $options;
-    }
-
-    public static function onQueue(?string $queue): Options
-    {
-        $options = new self();
-        $options->queue = $queue;
-
-        return $options;
-    }
 
     public function withQueue(?string $queue): self
     {
@@ -147,5 +130,21 @@ class Options implements OptionsInterface, ExtendedOptionsInterface, \JsonSerial
             'queue' => $this->queue,
             'headers' => $this->headers,
         ];
+    }
+
+    public static function delayed(int $delay): Options
+    {
+        $options = new self();
+        $options->delay = $delay;
+
+        return $options;
+    }
+
+    public static function onQueue(?string $queue): Options
+    {
+        $options = new self();
+        $options->queue = $queue;
+
+        return $options;
     }
 }

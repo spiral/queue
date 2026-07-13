@@ -5,9 +5,6 @@ declare(strict_types=1);
 namespace Spiral\Queue;
 
 use Spiral\Core\CoreInterface;
-use Spiral\Interceptors\Context\CallContext;
-use Spiral\Interceptors\Context\Target;
-use Spiral\Interceptors\HandlerInterface as InterceptorHandler;
 
 /**
  * This class is used to push jobs into the queue and pass them through the interceptor chain
@@ -18,23 +15,16 @@ use Spiral\Interceptors\HandlerInterface as InterceptorHandler;
  */
 final class Queue implements QueueInterface
 {
-    private readonly bool $isLegacy;
-
     public function __construct(
-        private readonly CoreInterface|InterceptorHandler $core,
+        private readonly CoreInterface $core,
     ) {
-        $this->isLegacy = !$core instanceof HandlerInterface;
     }
 
     public function push(string $name, mixed $payload = [], mixed $options = null): string
     {
-        $arguments = [
+        return $this->core->callAction($name, 'push', [
             'payload' => $payload,
             'options' => $options,
-        ];
-
-        return $this->isLegacy
-            ? $this->core->callAction($name, 'push', $arguments)
-            : $this->core->handle(new CallContext(Target::fromPair($name, 'push'), $arguments));
+        ]);
     }
 }

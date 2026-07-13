@@ -14,8 +14,9 @@ use Spiral\Queue\HandlerInterface;
 final class ObjectJob implements HandlerInterface
 {
     public function __construct(
-        private readonly InvokerInterface $invoker,
-    ) {}
+        private readonly InvokerInterface $invoker
+    ) {
+    }
 
     public function handle(string $name, string $id, array $payload, array $headers = []): void
     {
@@ -35,7 +36,7 @@ final class ObjectJob implements HandlerInterface
                 'name' => $name,
                 'id' => $id,
                 'headers' => $headers,
-            ],
+            ]
         );
     }
 }

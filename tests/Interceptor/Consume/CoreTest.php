@@ -16,20 +16,11 @@ use Spiral\Tests\Queue\TestCase;
 
 final class CoreTest extends TestCase
 {
-    public static function payloadDataProvider(): \Traversable
-    {
-        yield [['baz' => 'baf']];
-        yield [new \stdClass()];
-        yield ['some string'];
-        yield [123];
-        yield [null];
-    }
-
     #[DataProvider('payloadDataProvider')]
     public function testCallAction(mixed $payload): void
     {
         $core = new Core(
-            $registry = m::mock(HandlerRegistryInterface::class),
+            $registry = m::mock(HandlerRegistryInterface::class)
         );
 
         $registry->shouldReceive('getHandler')->with('foo')->once()
@@ -68,7 +59,7 @@ final class CoreTest extends TestCase
 
         $core = new Core(
             $registry = m::mock(HandlerRegistryInterface::class),
-            $dispatcher,
+            $dispatcher
         );
 
         $registry->shouldReceive('getHandler')->with('foo')->once()
@@ -83,5 +74,14 @@ final class CoreTest extends TestCase
             'id' => 'id',
             'payload' => $payload,
         ]);
+    }
+
+    public static function payloadDataProvider(): \Traversable
+    {
+        yield [['baz' => 'baf']];
+        yield [new \stdClass()];
+        yield ['some string'];
+        yield [123];
+        yield [null];
     }
 }

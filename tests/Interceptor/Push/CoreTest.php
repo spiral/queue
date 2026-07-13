@@ -17,20 +17,11 @@ use Spiral\Tests\Queue\TestCase;
 
 final class CoreTest extends TestCase
 {
-    public static function payloadDataProvider(): \Traversable
-    {
-        yield [['baz' => 'baf']];
-        yield [new \stdClass()];
-        yield ['some string'];
-        yield [123];
-        yield [null];
-    }
-
     #[DataProvider('payloadDataProvider')]
     public function testCallActionWithNullOptions(mixed $payload): void
     {
         $core = new Core(
-            $queue = m::mock(QueueInterface::class),
+            $queue = m::mock(QueueInterface::class)
         );
 
         if (!\is_array($payload)) {
@@ -39,11 +30,9 @@ final class CoreTest extends TestCase
         }
 
         $queue->shouldReceive('push')->once()
-            ->withArgs(
-                static fn(string $name, mixed $p = [], ?OptionsInterface $options = null): bool => $name === 'foo'
-                && $payload === $p
-                && $options instanceof Options,
-            );
+            ->withArgs(function (string $name, mixed $p = [], OptionsInterface $options = null) use($payload) {
+                return $name === 'foo' && $payload === $p && $options instanceof Options;
+            });
 
         $core->callAction('foo', 'bar', [
             'id' => 'job-id',
@@ -56,7 +45,7 @@ final class CoreTest extends TestCase
     public function testCallActionWithOptions(mixed $payload): void
     {
         $core = new Core(
-            $queue = m::mock(QueueInterface::class),
+            $queue = m::mock(QueueInterface::class)
         );
 
         if (!\is_array($payload)) {
@@ -87,14 +76,18 @@ final class CoreTest extends TestCase
 
 
         $tracer->shouldReceive('getContext')->once()->andReturn(['foo' => ['bar']]);
-        $tracer->shouldReceive('trace')->once()->andReturnUsing(static fn($name, $callback) => $callback());
+        $tracer->shouldReceive('trace')->once()->andReturnUsing(function ($name, $callback) {
+            return $callback();
+        });
 
         $queue->shouldReceive('push')->once()
-            ->withArgs(static fn(string $name, array $payload = [], ?OptionsInterface $options = null): bool => $name === 'foo'
-                && $payload === ['baz' => 'baf']
-                && $options->getHeader('foo') === ['bar']);
+            ->withArgs(function (string $name, array $payload = [], OptionsInterface $options = null) {
+                return $name === 'foo'
+                    && $payload === ['baz' => 'baf']
+                    && $options->getHeader('foo') === ['bar'];
+            });
 
-        ContainerScope::runScope($container, static function () use ($core): void {
+        ContainerScope::runScope($container, function() use($core) {
             $core->callAction('foo', 'bar', [
                 'id' => 'job-id',
                 'payload' => ['baz' => 'baf'],
@@ -113,14 +106,25 @@ final class CoreTest extends TestCase
         $tracer->shouldNotReceive('getContext');
 
         $queue->shouldReceive('push')->once()
-            ->withArgs(static fn(string $name, array $payload = [], ?OptionsInterface $options = null): bool => $name === 'foo'
-                && $payload === ['baz' => 'baf']
-                && $options !== null);
+            ->withArgs(function (string $name, array $payload = [], OptionsInterface $options = null) {
+                return $name === 'foo'
+                    && $payload === ['baz' => 'baf']
+                    && $options !== null;
+            });
 
         $core->callAction('foo', 'bar', [
             'id' => 'job-id',
             'payload' => ['baz' => 'baf'],
             'options' => m::mock(OptionsInterface::class),
         ]);
+    }
+
+    public static function payloadDataProvider(): \Traversable
+    {
+        yield [['baz' => 'baf']];
+        yield [new \stdClass()];
+        yield ['some string'];
+        yield [123];
+        yield [null];
     }
 }

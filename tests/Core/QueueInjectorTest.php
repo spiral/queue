@@ -1,11 +1,10 @@
 <?php
 
-declare(strict_types=1);
-
 namespace Spiral\Tests\Queue\Core;
 
 use Mockery as m;
 use Psr\Container\ContainerInterface;
+use ReflectionClass;
 use Spiral\Core\Exception\Container\NotFoundException;
 use Spiral\Core\FactoryInterface;
 use Spiral\Queue\Config\QueueConfig;
@@ -21,36 +20,36 @@ final class QueueInjectorTest extends TestCase
     private QueueInterface $defaultQueue;
     private QueueInterface $testQueue;
 
-    public function testGetByContext(): void
-    {
-        $injector = $this->createInjector();
-        $reflection = new \ReflectionClass(TestQueueClass::class);
-
-        $this->testQueue->shouldReceive('push')->once();
-
-        $result = $injector->createInjection($reflection, 'test');
-        $result->push('foo');
-
-        self::assertInstanceOf(Queue::class, $result);
-    }
-
-    public function testGetByIncorrectContext(): void
-    {
-        $injector = $this->createInjector();
-        $reflection = new \ReflectionClass(QueueInterface::class);
-
-        $this->defaultQueue->shouldReceive('push')->once();
-
-        $result = $injector->createInjection($reflection, 'userQueue');
-        $result->push('foo');
-    }
-
     protected function setUp(): void
     {
         parent::setUp();
 
         $this->testQueue = m::mock(QueueInterface::class);
         $this->defaultQueue = m::mock(QueueInterface::class);
+    }
+
+    public function testGetByContext(): void
+    {
+        $injector = $this->createInjector();
+        $reflection = new ReflectionClass(TestQueueClass::class);
+
+        $this->testQueue->shouldReceive('push')->once();
+
+        $result = $injector->createInjection($reflection, 'test');
+        $result->push('foo');
+
+        $this->assertInstanceOf(Queue::class, $result);
+    }
+
+    public function testGetByIncorrectContext(): void
+    {
+        $injector = $this->createInjector();
+        $reflection = new ReflectionClass(QueueInterface::class);
+
+        $this->defaultQueue->shouldReceive('push')->once();
+
+        $result = $injector->createInjection($reflection, 'userQueue');
+        $result->push('foo');
     }
 
     private function createInjector(): QueueInjector
@@ -100,8 +99,8 @@ final class QueueInjectorTest extends TestCase
             new QueueManager(
                 $config,
                 $container,
-                $factory,
-            ),
+                $factory
+            )
         );
     }
 }

@@ -17,6 +17,15 @@ use Spiral\Tests\Queue\Attribute\Stub\QueueableWithQueue;
 
 final class QueueableDetectorTest extends TestCase
 {
+    #[DataProvider('queueableProvider')]
+    public function testQueueable($object, bool $queueable, ?string $queue): void
+    {
+        $detector = new QueueableDetector((new Factory())->create());
+
+        $this->assertSame($queueable, $detector->isQueueable($object));
+        $this->assertSame($queue, $detector->getQueue($object));
+    }
+
     public static function queueableProvider(): \Traversable
     {
         yield [Queueable::class, true, null];
@@ -27,14 +36,5 @@ final class QueueableDetectorTest extends TestCase
         yield [NotQueueable::class, false, null];
         yield [new NotQueueable(), false, null];
         yield [NotQueueableInterface::class, false, null];
-    }
-
-    #[DataProvider('queueableProvider')]
-    public function testQueueable($object, bool $queueable, ?string $queue): void
-    {
-        $detector = new QueueableDetector((new Factory())->create());
-
-        self::assertSame($queueable, $detector->isQueueable($object));
-        self::assertSame($queue, $detector->getQueue($object));
     }
 }

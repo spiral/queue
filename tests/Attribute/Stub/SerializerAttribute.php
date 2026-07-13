@@ -7,4 +7,6 @@ namespace Spiral\Tests\Queue\Attribute\Stub;
 use Spiral\Queue\Attribute\Serializer;
 
 #[Serializer(serializer: 'test')]
-final class SerializerAttribute {}
+final class SerializerAttribute
+{
+}

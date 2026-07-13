@@ -14,8 +14,9 @@ final class JobHandlerLocatorListener implements TokenizationListenerInterface
 {
     public function __construct(
         private readonly ReaderInterface $reader,
-        private readonly QueueRegistry $registry,
-    ) {}
+        private readonly QueueRegistry $registry
+    ) {
+    }
 
     public function listen(\ReflectionClass $class): void
     {
@@ -27,5 +28,7 @@ final class JobHandlerLocatorListener implements TokenizationListenerInterface
         $this->registry->setHandler($attribute->type, $class->getName());
     }
 
-    public function finalize(): void {}
+    public function finalize(): void
+    {
+    }
 }

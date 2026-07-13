@@ -11,16 +11,16 @@ use Spiral\Queue\Exception\RetryableExceptionInterface;
 final class RetryPolicy implements RetryPolicyInterface
 {
     /**
-     * @var int<0, max>
+     * @var positive-int|0
      */
-    private readonly int $maxAttempts;
+    private int $maxAttempts;
 
     /**
-     * @var int<0, max>
+     * @var positive-int|0
      */
-    private readonly int $delay;
+    private int $delay;
 
-    private readonly float $multiplier;
+    private float $multiplier;
 
     /**
      * @throws InvalidArgumentException
@@ -29,30 +29,30 @@ final class RetryPolicy implements RetryPolicyInterface
     {
         if ($maxAttempts < 0) {
             throw new InvalidArgumentException(
-                \sprintf('Maximum attempts must be greater than or equal to zero: `%s` given.', $maxAttempts),
+                \sprintf('Maximum attempts must be greater than or equal to zero: `%s` given.', $maxAttempts)
             );
         }
         $this->maxAttempts = $maxAttempts;
 
         if ($delay < 0) {
             throw new InvalidArgumentException(
-                \sprintf('Delay must be greater than or equal to zero: `%s` given.', $delay),
+                \sprintf('Delay must be greater than or equal to zero: `%s` given.', $delay)
             );
         }
         $this->delay = $delay;
 
         if ($multiplier < 1) {
             throw new InvalidArgumentException(
-                \sprintf('Multiplier must be greater than zero: `%s` given.', $multiplier),
+                \sprintf('Multiplier must be greater than zero: `%s` given.', $multiplier)
             );
         }
         $this->multiplier = $multiplier;
     }
 
     /**
-     * @param int<0, max> $attempts
+     * @param positive-int|0 $attempts
      *
-     * @return int<0, max>
+     * @return positive-int
      */
     public function getDelay(int $attempts = 0): int
     {
@@ -60,7 +60,7 @@ final class RetryPolicy implements RetryPolicyInterface
     }
 
     /**
-     * @param int<0, max> $attempts
+     * @param positive-int|0 $attempts
      */
     public function isRetryable(\Throwable $exception, int $attempts = 0): bool
     {
