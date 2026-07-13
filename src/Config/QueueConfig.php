@@ -5,11 +5,17 @@ declare(strict_types=1);
 namespace Spiral\Queue\Config;
 
 use Spiral\Core\Container\Autowire;
-use Spiral\Core\CoreInterceptorInterface;
+use Spiral\Core\CoreInterceptorInterface as LegacyInterceptor;
 use Spiral\Core\InjectableConfig;
+use Spiral\Interceptors\InterceptorInterface;
 use Spiral\Queue\Exception\InvalidArgumentException;
 use Spiral\Serializer\SerializerInterface;
 
+/**
+ * @psalm-type TLegacyInterceptors = array<class-string<LegacyInterceptor>|LegacyInterceptor|Autowire>
+ * @psalm-type TNewInterceptors = array<class-string<InterceptorInterface>|InterceptorInterface|Autowire>
+ * @psalm-type TInterceptors = TNewInterceptors|TLegacyInterceptors
+ */
 final class QueueConfig extends InjectableConfig
 {
     public const CONFIG = 'queue';
@@ -41,21 +47,21 @@ final class QueueConfig extends InjectableConfig
     /**
      * Get consumer interceptors
      *
-     * @return array<class-string<CoreInterceptorInterface>|CoreInterceptorInterface|Autowire>
+     * @return TInterceptors
      */
     public function getConsumeInterceptors(): array
     {
-        return (array)($this->config['interceptors']['consume'] ?? []);
+        return (array) ($this->config['interceptors']['consume'] ?? []);
     }
 
     /**
      * Get pusher interceptors
      *
-     * @return array<class-string<CoreInterceptorInterface>|CoreInterceptorInterface|Autowire>
+     * @return TInterceptors
      */
     public function getPushInterceptors(): array
     {
-        return (array)($this->config['interceptors']['push'] ?? []);
+        return (array) ($this->config['interceptors']['push'] ?? []);
     }
 
     /**
@@ -76,7 +82,7 @@ final class QueueConfig extends InjectableConfig
      */
     public function getDriverAliases(): array
     {
-        return (array)($this->config['driverAliases'] ?? []);
+        return (array) ($this->config['driverAliases'] ?? []);
     }
 
     /**
@@ -95,7 +101,7 @@ final class QueueConfig extends InjectableConfig
         if (isset($driverAliases[$driver])) {
             if (!\is_string($this->config['driverAliases'][$driver])) {
                 throw new InvalidArgumentException(
-                    \sprintf('Driver alias for `%s` value must be a string', $driver)
+                    \sprintf('Driver alias for `%s` value must be a string', $driver),
                 );
             }
 
@@ -122,7 +128,7 @@ final class QueueConfig extends InjectableConfig
         $connections = $this->getConnections();
 
         if (!isset($connections[$name])) {
-            throw new InvalidArgumentException(sprintf('Queue connection with given name `%s` is not defined.', $name));
+            throw new InvalidArgumentException(\sprintf('Queue connection with given name `%s` is not defined.', $name));
         }
 
         if (!isset($connections[$name]['driver'])) {
@@ -134,7 +140,7 @@ final class QueueConfig extends InjectableConfig
 
         if (!\is_string($driver)) {
             throw new InvalidArgumentException(
-                \sprintf('Driver for queue connection `%s` value must be a string', $name)
+                \sprintf('Driver for queue connection `%s` value must be a string', $name),
             );
         }
 
@@ -144,7 +150,7 @@ final class QueueConfig extends InjectableConfig
 
         if (!\is_string($connection['driver'])) {
             throw new InvalidArgumentException(
-                \sprintf('Driver alias for queue connection `%s` value must be a string', $name)
+                \sprintf('Driver alias for queue connection `%s` value must be a string', $name),
             );
         }
 
@@ -156,12 +162,12 @@ final class QueueConfig extends InjectableConfig
      */
     public function getRegistryHandlers(): array
     {
-        return (array)($this->config['registry']['handlers'] ?? []);
+        return (array) ($this->config['registry']['handlers'] ?? []);
     }
 
     public function getRegistrySerializers(): array
     {
-        return (array)($this->config['registry']['serializers'] ?? []);
+        return (array) ($this->config['registry']['serializers'] ?? []);
     }
 
     /**

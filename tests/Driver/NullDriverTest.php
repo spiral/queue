@@ -12,20 +12,6 @@ final class NullDriverTest extends TestCase
 {
     private NullDriver $queue;
 
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        $this->queue = new NullDriver();
-    }
-
-    #[DataProvider('payloadDataProvider')]
-    public function testJobShouldBePushed(mixed $payload): void
-    {
-        $id = $this->queue->push('foo', $payload);
-        $this->assertNotNull($id);
-    }
-
     public static function payloadDataProvider(): \Traversable
     {
         yield [['baz' => 'baf']];
@@ -33,5 +19,19 @@ final class NullDriverTest extends TestCase
         yield ['some string'];
         yield [123];
         yield [null];
+    }
+
+    #[DataProvider('payloadDataProvider')]
+    public function testJobShouldBePushed(mixed $payload): void
+    {
+        $id = $this->queue->push('foo', $payload);
+        self::assertNotNull($id);
+    }
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->queue = new NullDriver();
     }
 }

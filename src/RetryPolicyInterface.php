@@ -7,14 +7,14 @@ namespace Spiral\Queue;
 interface RetryPolicyInterface
 {
     /**
-     * @param positive-int|0 $attempts
+     * @param int<0, max> $attempts
      */
     public function isRetryable(\Throwable $exception, int $attempts = 0): bool;
 
     /**
-     * @param positive-int|0 $attempts
+     * @param int<0, max> $attempts
      *
-     * @return positive-int
+     * @return int<0, max> Delay in seconds
      */
     public function getDelay(int $attempts = 0): int;
 }
